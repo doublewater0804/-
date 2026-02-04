@@ -248,7 +248,14 @@
     let lastManualProgress = 0;
 
     // ===== Utils =====
-    const getTodayStr = () => new Date().toISOString().split('T')[0];
+    // ✅ 改成本地日，避免 toISOString() 在 00:00~08:00(台灣) 可能差一天
+    const getTodayStr = () => {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
 
     // 允許：YYYY-MM-DD 或 YYYY.MM.DD -> 轉成 YYYY-MM-DD
     const fixDate = (v) => {
@@ -267,6 +274,7 @@
       const createdAt = fixDate(t?.createdAt) || today;
       const deadline = fixDate(t?.deadline) || today;
 
+      const p = Number.parseInt(t?.progress, 10);
       return {
         id: t?.id ?? (Date.now() + i),
         factory: t?.factory || '台北',
@@ -277,7 +285,7 @@
         desc: t?.desc || '',
         createdAt,
         deadline,
-        progress: Number.isFinite(parseInt(t?.progress)) ? parseInt(t.progress) : 0
+        progress: Number.isFinite(p) ? p : 0
       };
     }
 
@@ -352,7 +360,7 @@
       const checkbox = document.getElementById('f-is-done');
       const progressText = document.getElementById('f-progress-text');
       if (progressText) progressText.innerText = val;
-      if (checkbox) checkbox.checked = (parseInt(val) === 100);
+      if (checkbox) checkbox.checked = (parseInt(val, 10) === 100);
       if (val < 100) lastManualProgress = val;
     }
 
@@ -408,7 +416,7 @@
       if (monthSelect) {
         const uniqueMonths = [...new Set(
           tasks.map(t => {
-            const m = parseInt(String(t.createdAt || '').split('-')[1]);
+            const m = parseInt(String(t.createdAt || '').split('-')[1], 10);
             return isNaN(m) ? null : m;
           })
         )].filter(m => m !== null).sort((a, b) => a - b);
@@ -435,9 +443,9 @@
 
       const filtered = tasks.filter(t => {
         const sInfo = getStatusInfo(t);
-        const tMonth = parseInt(String(t.createdAt || '').split('-')[1]);
+        const tMonth = parseInt(String(t.createdAt || '').split('-')[1], 10);
 
-        return (filters.month === 'all' || String(tMonth) === filters.month) &&
+        return (filters.month === 'all' || String(tMonth) === String(filters.month)) &&
           (filters.status === 'all' || sInfo.code === filters.status) &&
           (filters.factory === 'all' || t.factory === filters.factory) &&
           (filters.category === 'all' || t.category === filters.category) &&
@@ -468,7 +476,7 @@
         .forEach(t => {
           const s = getStatusInfo(t);
           const isDone = t.progress >= 100;
-          const m = parseInt(String(t.createdAt || '').split('-')[1]);
+          const m = parseInt(String(t.createdAt || '').split('-')[1], 10);
 
           const row = document.createElement('tr');
           row.className = `hover:bg-slate-50/50 transition ${isDone ? 'opacity-60' : ''}`;
@@ -623,7 +631,7 @@
         owner: document.getElementById('f-owner').value,
         createdAt: createdAtVal,
         deadline: deadlineVal,
-        progress: parseInt(document.getElementById('f-progress').value)
+        progress: Number.parseInt(document.getElementById('f-progress').value, 10)
       };
 
       if (!taskObj.task || !taskObj.owner) return alert("請填寫必填欄位");
@@ -650,7 +658,7 @@
       }
     }
 
-    // ✅ 修正 1：closeModal 時清掉 editingId，避免狀態殘留
+    // ✅ closeModal 時清掉 editingId，避免狀態殘留
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
       editingId = null;
@@ -725,7 +733,7 @@
           document.getElementById('f-source').value = 'NOTES';
           toggleOtherSource('NOTES');
 
-          // ✅ 修正 2：保險，強制隱藏「其他來源」容器（避免殘留顯示）
+          // ✅ 保險：強制隱藏「其他來源」容器（避免殘留顯示）
           document.getElementById('other-source-container')?.classList.add('hidden');
 
           // ✅ 避免「其他來源」殘留上一次輸入
