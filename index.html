@@ -252,7 +252,30 @@
       </div>
     </div>
   </div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGgf0A5MFOqPxQvlX8tACski48bMYI_DU",
+    authDomain: "esh-v85.firebaseapp.com",
+    projectId: "esh-v85",
+    storageBucket: "esh-v85.firebasestorage.app",
+    messagingSenderId: "1021350670476",
+    appId: "1:1021350670476:web:afd5bc96ff28c910f48ba9",
+    measurementId: "G-MMVQN63GDG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  // Analytics 可能因環境而失敗，不影響主程式
+  let analytics = null;
+  try { analytics = getAnalytics(app); } catch (e) {}
+
+  // 讓非 module 的原本程式也能使用
+  window.firebaseApp = app;
+  window.firebaseAnalytics = analytics;
+</script>
   <script>
     // ===== Storage Keys (v8.5 建議獨立) =====
     const LOCAL_STORAGE_KEY = 'ESH_MANAGEMENT_DATA_V85';
@@ -808,3 +831,4 @@
   </script>
 </body>
 </html>
+
