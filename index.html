@@ -88,7 +88,7 @@
       </div>
       <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <h3 class="font-bold text-slate-800 mb-6 flex items-center">
-          <span class="w-2 h-5 bg-emerald-500 rounded mr-2"></span> 各廠區任務統計
+          <span class="w-2 h-5 bg-emerald-500 rounded mr-2"></span> 各廠區任務統計（堆疊：已完成/正常/警告/逾期）
         </h3>
         <div class="chart-container"><canvas id="factoryChart"></canvas></div>
       </div>
@@ -172,87 +172,78 @@
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
       </div>
 
-      <!-- ✅ 改為 grid-cols-2 + 文字欄位全寬 (col-span-2) -->
-      <div class="p-8 grid grid-cols-2 gap-6">
-
-        <div class="col-span-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">廠區</label>
-          <select id="f-factory" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-            <option>台北</option><option>龍德</option><option>彰化</option><option>麥寮</option><option>新港</option><option>海外</option>
-          </select>
-        </div>
-
-        <div class="col-span-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作類別</label>
-          <select id="f-category" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-            <option>PSM</option><option>工安</option><option>環保</option><option>消防</option><option>AI</option><option>庶務</option>
-          </select>
-        </div>
-
-        <div class="col-span-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">來源</label>
-          <select id="f-source" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleOtherSource(this.value)">
-            <option>NOTES</option><option>速報表</option><option>環保通報單</option><option>主管口頭交辦</option><option>報告</option><option>業洽函</option><option>層峰指示</option><option>法規要求</option><option>全企業工安環保通報</option><option>專案工作</option><option>其他</option>
-          </select>
-        </div>
-
-        <div class="col-span-1 hidden" id="other-source-container">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">請輸入具體來源</label>
-          <input type="text" id="f-source-other" class="w-full border border-blue-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="來源名稱" />
-        </div>
-
-        <div class="col-span-2">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作項目</label>
-          <input type="text" id="f-task" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-
-        <div class="col-span-2">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">詳細描述</label>
-          <textarea id="f-desc" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-        </div>
-
-        <!-- ✅ 新增：辦理進度（文字） -->
-        <div class="col-span-2">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">辦理進度（說明）</label>
-          <textarea id="f-progress-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例：已完成現場會勘，待廠務提供改善照片。"></textarea>
-        </div>
-
-        <!-- ✅ 新增：結案說明 -->
-        <div class="col-span-2">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">結案說明</label>
-          <textarea id="f-close-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例：改善完成並驗收，附件：照片/報告已歸檔。"></textarea>
-        </div>
-
-        <div class="col-span-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">負責人</label>
-          <input type="text" id="f-owner" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-
-        <div class="col-span-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">建檔日期</label>
-          <input type="date" id="f-created" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
-        </div>
-
-        <div class="col-span-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">截止日期</label>
-          <input type="date" id="f-deadline" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-
-        <div class="col-span-1 flex items-end pb-3">
-          <label class="flex items-center space-x-3 cursor-pointer bg-slate-50 p-3 rounded-lg border border-slate-200 w-full hover:bg-slate-100 transition">
-            <input type="checkbox" id="f-is-done" class="modal-checkbox" onchange="handleModalDoneToggle(this.checked)" />
-            <span class="text-sm font-bold text-slate-700">設為「已完成」</span>
-          </label>
-        </div>
-
-        <div class="col-span-2">
-          <div class="flex justify-between items-center mb-2">
-            <label class="block text-xs font-bold text-slate-400 uppercase">目前進度</label>
-            <span class="text-sm font-black text-blue-600"><span id="f-progress-text">0</span>%</span>
+      <!-- ✅ 可捲動表單區 -->
+      <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div class="grid grid-cols-2 gap-6">
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">廠區</label>
+            <select id="f-factory" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option>台北</option><option>龍德</option><option>彰化</option><option>麥寮</option><option>新港</option><option>海外</option>
+            </select>
           </div>
-          <input type="range" id="f-progress" min="0" max="100" step="5" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="handleProgressInput(this.value)" />
-        </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作類別</label>
+            <select id="f-category" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option>PSM</option><option>工安</option><option>環保</option><option>消防</option><option>AI</option><option>庶務</option>
+            </select>
+          </div>
 
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">來源</label>
+            <select id="f-source" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleOtherSource(this.value)">
+              <option>NOTES</option><option>速報表</option><option>環保通報單</option><option>主管口頭交辦</option><option>報告</option><option>業洽函</option><option>層峰指示</option><option>法規要求</option><option>全企業工安環保通報</option><option>專案工作</option><option>其他</option>
+            </select>
+          </div>
+          <div class="col-span-1 hidden" id="other-source-container">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">請輸入具體來源</label>
+            <input type="text" id="f-source-other" class="w-full border border-blue-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="來源名稱" />
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作項目</label>
+            <input type="text" id="f-task" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">詳細描述</label>
+            <textarea id="f-desc" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+
+          <!-- ✅ 新增：辦理進度、結案說明 -->
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">辦理進度（文字）</label>
+            <textarea id="f-work-progress" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：已發函/已會勘/改善中/待回覆..."></textarea>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">結案說明</label>
+            <textarea id="f-close-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：已完成改善並驗收/已結案核備..."></textarea>
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">負責人</label>
+            <input type="text" id="f-owner" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">建檔日期</label>
+            <input type="date" id="f-created" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
+          </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">截止日期</label>
+            <input type="date" id="f-deadline" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="col-span-1 flex items-end pb-3">
+            <label class="flex items-center space-x-3 cursor-pointer bg-slate-50 p-3 rounded-lg border border-slate-200 w-full hover:bg-slate-100 transition">
+              <input type="checkbox" id="f-is-done" class="modal-checkbox" onchange="handleModalDoneToggle(this.checked)" />
+              <span class="text-sm font-bold text-slate-700">設為「已完成」</span>
+            </label>
+          </div>
+          <div class="col-span-2">
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-xs font-bold text-slate-400 uppercase">目前進度</label>
+              <span class="text-sm font-black text-blue-600"><span id="f-progress-text">0</span>%</span>
+            </div>
+            <input type="range" id="f-progress" min="0" max="100" step="5" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="handleProgressInput(this.value)" />
+          </div>
+        </div>
       </div>
 
       <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
@@ -275,14 +266,7 @@
     let lastManualProgress = 0;
 
     // ===== Utils =====
-    // ✅ 改成本地日，避免 toISOString() 在 00:00~08:00(台灣) 可能差一天
-    const getTodayStr = () => {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
-    };
+    const getTodayStr = () => new Date().toISOString().split('T')[0];
 
     // 允許：YYYY-MM-DD 或 YYYY.MM.DD -> 轉成 YYYY-MM-DD
     const fixDate = (v) => {
@@ -301,7 +285,6 @@
       const createdAt = fixDate(t?.createdAt) || today;
       const deadline = fixDate(t?.deadline) || today;
 
-      const p = Number.parseInt(t?.progress, 10);
       return {
         id: t?.id ?? (Date.now() + i),
         factory: t?.factory || '台北',
@@ -310,12 +293,12 @@
         owner: t?.owner || '',
         task: t?.task || '',
         desc: t?.desc || '',
-        // ✅ 新增兩欄：若舊資料沒有，補空字串
-        progressNote: typeof t?.progressNote === 'string' ? t.progressNote : '',
-        closeNote: typeof t?.closeNote === 'string' ? t.closeNote : '',
+        // ✅ 新增欄位
+        workProgress: t?.workProgress || '',
+        closeNote: t?.closeNote || '',
         createdAt,
         deadline,
-        progress: Number.isFinite(p) ? p : 0
+        progress: Number.isFinite(parseInt(t?.progress)) ? parseInt(t.progress) : 0
       };
     }
 
@@ -349,7 +332,7 @@
           owner: "林課長",
           task: "範例：環保通報單追蹤",
           desc: "改善設施。",
-          progressNote: "已通知相關單位，待回覆改善時程。",
+          workProgress: "已通知相關單位，改善中。",
           closeNote: "",
           createdAt: "2024-05-20",
           deadline: "2024-06-15",
@@ -392,7 +375,7 @@
       const checkbox = document.getElementById('f-is-done');
       const progressText = document.getElementById('f-progress-text');
       if (progressText) progressText.innerText = val;
-      if (checkbox) checkbox.checked = (parseInt(val, 10) === 100);
+      if (checkbox) checkbox.checked = (parseInt(val) === 100);
       if (val < 100) lastManualProgress = val;
     }
 
@@ -448,7 +431,7 @@
       if (monthSelect) {
         const uniqueMonths = [...new Set(
           tasks.map(t => {
-            const m = parseInt(String(t.createdAt || '').split('-')[1], 10);
+            const m = parseInt(String(t.createdAt || '').split('-')[1]);
             return isNaN(m) ? null : m;
           })
         )].filter(m => m !== null).sort((a, b) => a - b);
@@ -475,9 +458,9 @@
 
       const filtered = tasks.filter(t => {
         const sInfo = getStatusInfo(t);
-        const tMonth = parseInt(String(t.createdAt || '').split('-')[1], 10);
+        const tMonth = parseInt(String(t.createdAt || '').split('-')[1]);
 
-        return (filters.month === 'all' || String(tMonth) === String(filters.month)) &&
+        return (filters.month === 'all' || String(tMonth) === filters.month) &&
           (filters.status === 'all' || sInfo.code === filters.status) &&
           (filters.factory === 'all' || t.factory === filters.factory) &&
           (filters.category === 'all' || t.category === filters.category) &&
@@ -495,16 +478,19 @@
       document.getElementById('table-count').innerText = `${filtered.length} ITEMS`;
 
       renderTable(filtered);
+
+      // ✅ 依你要求：廠區長條圖「不要跟篩選器走」→ 永遠用全量 tasks
       renderCharts(tasks);
     }
 
-    // ✅ 安全處理：避免表格顯示時被注入 HTML（把文字當純文字）
-    const escapeHtml = (s) => String(s ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
 
     function renderTable(data) {
       const tbody = document.getElementById('main-table-body');
@@ -516,13 +502,15 @@
         .forEach(t => {
           const s = getStatusInfo(t);
           const isDone = t.progress >= 100;
-          const m = parseInt(String(t.createdAt || '').split('-')[1], 10);
+          const m = parseInt(String(t.createdAt || '').split('-')[1]);
 
-          // ✅ 兩段備註：優先顯示辦理進度；若已完成且有結案說明，再加一行
-          const noteLines = [];
-          if (String(t.progressNote || '').trim()) noteLines.push(`進度：${t.progressNote}`);
-          if (t.progress >= 100 && String(t.closeNote || '').trim()) noteLines.push(`結案：${t.closeNote}`);
-          const noteText = noteLines.join('｜');
+          const wp = (t.workProgress || '').trim();
+          const cn = (t.closeNote || '').trim();
+
+          const extraLines = [
+            wp ? `<div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">辦理：${escapeHtml(wp)}</div>` : '',
+            cn ? `<div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">結案：${escapeHtml(cn)}</div>` : ''
+          ].join('');
 
           const row = document.createElement('tr');
           row.className = `hover:bg-slate-50/50 transition ${isDone ? 'opacity-60' : ''}`;
@@ -538,10 +526,10 @@
               </span>
             </td>
             <td class="px-6 py-4">
-              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${escapeHtml(t.category)}</span>
+              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${t.category}</span>
             </td>
             <td class="px-6 py-4">
-              <div class="font-bold text-slate-800">${escapeHtml(t.factory)}</div>
+              <div class="font-bold text-slate-800">${t.factory}</div>
               <div class="text-[10px] font-bold text-blue-600">${isNaN(m) ? '—' : `${m}月管制`}</div>
             </td>
             <td class="px-6 py-4">
@@ -551,7 +539,7 @@
             <td class="px-6 py-4">
               <div class="font-bold text-slate-800 line-clamp-1 ${isDone ? 'line-through text-slate-400' : ''}">${escapeHtml(t.task)}</div>
               <div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">${escapeHtml(t.desc)}</div>
-              ${noteText ? `<div class="text-[11px] text-slate-500 line-clamp-1 mt-1" title="${escapeHtml(noteText)}">${escapeHtml(noteText)}</div>` : ''}
+              ${extraLines}
             </td>
             <td class="px-6 py-4 text-center font-mono text-xs text-slate-400">${escapeHtml(t.createdAt)}</td>
             <td class="px-6 py-4 text-center font-mono text-xs font-bold text-slate-600">${escapeHtml(t.deadline)}</td>
@@ -579,6 +567,7 @@
       const canvasFactory = document.getElementById('factoryChart');
       if (!canvasStatus || !canvasFactory) return;
 
+      // ===== 圓環：狀態總覽 =====
       const counts = { done: 0, active: 0, warning: 0, overdue: 0 };
       data.forEach(t => counts[getStatusInfo(t).code]++);
 
@@ -601,27 +590,46 @@
         }
       });
 
+      // ===== 長條：各廠區堆疊（已完成/正常/警告/逾期）=====
       const facLabels = ['台北', '龍德', '彰化', '麥寮', '新港', '海外'];
-      const facCounts = facLabels.map(f => data.filter(t => t.factory === f).length);
+      const facAgg = facLabels.reduce((acc, f) => {
+        acc[f] = { done: 0, active: 0, warning: 0, overdue: 0 };
+        return acc;
+      }, {});
+      data.forEach(t => {
+        const f = facAgg[t.factory] ? t.factory : null;
+        if (!f) return;
+        facAgg[f][getStatusInfo(t).code]++;
+      });
+
+      const doneArr = facLabels.map(f => facAgg[f].done);
+      const activeArr = facLabels.map(f => facAgg[f].active);
+      const warningArr = facLabels.map(f => facAgg[f].warning);
+      const overdueArr = facLabels.map(f => facAgg[f].overdue);
 
       if (factoryChart) factoryChart.destroy();
       factoryChart = new Chart(canvasFactory, {
         type: 'bar',
         data: {
           labels: facLabels,
-          datasets: [{
-            label: '任務數',
-            data: facCounts,
-            backgroundColor: '#e2e8f0',
-            borderRadius: 4,
-            hoverBackgroundColor: '#3b82f6'
-          }]
+          datasets: [
+            { label: '已完成', data: doneArr, backgroundColor: '#3b82f6', borderRadius: 4, stack: 's1' },
+            { label: '正常',   data: activeArr, backgroundColor: '#10b981', borderRadius: 4, stack: 's1' },
+            { label: '警告',   data: warningArr, backgroundColor: '#fbbf24', borderRadius: 4, stack: 's1' },
+            { label: '逾期',   data: overdueArr, backgroundColor: '#ef4444', borderRadius: 4, stack: 's1' }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-          plugins: { legend: { display: false } }
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+          },
+          plugins: {
+            legend: { position: 'top', labels: { font: { weight: 'bold' } } },
+            tooltip: { mode: 'index', intersect: false }
+          }
         }
       });
     }
@@ -645,9 +653,11 @@
 
       document.getElementById('f-task').value = t.task;
       document.getElementById('f-desc').value = t.desc;
-      document.getElementById('f-progress-note').value = t.progressNote || '';
-      document.getElementById('f-close-note').value = t.closeNote || '';
       document.getElementById('f-owner').value = t.owner;
+
+      // ✅ 新增欄位回填
+      document.getElementById('f-work-progress').value = t.workProgress || '';
+      document.getElementById('f-close-note').value = t.closeNote || '';
 
       document.getElementById('f-created').value = fixDate(t.createdAt) || getTodayStr();
       document.getElementById('f-deadline').value = fixDate(t.deadline) || getTodayStr();
@@ -667,7 +677,6 @@
         sourceVal = other ? `其他:${other}` : '其他';
       }
 
-      // 日期欄位可能被清空：存檔前修正
       const createdAtVal = fixDate(document.getElementById('f-created').value) || getTodayStr();
       const deadlineVal = fixDate(document.getElementById('f-deadline').value) || getTodayStr();
 
@@ -677,13 +686,13 @@
         source: sourceVal,
         task: document.getElementById('f-task').value,
         desc: document.getElementById('f-desc').value,
-        // ✅ 新增兩欄
-        progressNote: document.getElementById('f-progress-note').value,
-        closeNote: document.getElementById('f-close-note').value,
         owner: document.getElementById('f-owner').value,
+        // ✅ 新增欄位
+        workProgress: document.getElementById('f-work-progress').value,
+        closeNote: document.getElementById('f-close-note').value,
         createdAt: createdAtVal,
         deadline: deadlineVal,
-        progress: Number.parseInt(document.getElementById('f-progress').value, 10)
+        progress: parseInt(document.getElementById('f-progress').value)
       };
 
       if (!taskObj.task || !taskObj.owner) return alert("請填寫必填欄位");
@@ -710,15 +719,13 @@
       }
     }
 
-    // closeModal 時清掉 editingId，避免狀態殘留
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
-      editingId = null;
+      editingId = null; // 避免狀態殘留
     }
 
     // ===== Excel =====
     function exportToExcel() {
-      // ✅ 直接匯出 tasks（含 progressNote/closeNote），欄位會一起進 Excel
       const ws = XLSX.utils.json_to_sheet(tasks);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Tasks");
@@ -745,7 +752,6 @@
       };
       reader.readAsArrayBuffer(file);
 
-      // 允許同一檔案重複匯入也會觸發 change
       event.target.value = '';
     }
 
@@ -774,8 +780,6 @@
 
           document.getElementById('f-task').value = "";
           document.getElementById('f-desc').value = "";
-          document.getElementById('f-progress-note').value = "";
-          document.getElementById('f-close-note').value = "";
           document.getElementById('f-owner').value = "";
           document.getElementById('f-created').value = getTodayStr();
           document.getElementById('f-deadline').value = getTodayStr();
@@ -788,12 +792,14 @@
           document.getElementById('f-source').value = 'NOTES';
           toggleOtherSource('NOTES');
 
-          // 保險：強制隱藏「其他來源」容器（避免殘留顯示）
+          // 避免「其他來源」殘留
           document.getElementById('other-source-container')?.classList.add('hidden');
+          const otherSourceEl = document.getElementById('f-source-other');
+          if (otherSourceEl) otherSourceEl.value = '';
 
-          // 避免「其他來源」殘留上一次輸入
-          const otherEl = document.getElementById('f-source-other');
-          if (otherEl) otherEl.value = '';
+          // ✅ 新欄位清空
+          document.getElementById('f-work-progress').value = '';
+          document.getElementById('f-close-note').value = '';
 
           document.getElementById('modal').classList.remove('hidden');
         });
