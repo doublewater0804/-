@@ -321,7 +321,7 @@
     // 你可以把 workspaceId 改成公司代碼（跨公司隔離用）
     // 例如：const WORKSPACE_ID = "YOUR_COMPANY_2026";
     const WORKSPACE_ID = "DEFAULT_WORKSPACE_V85";
-    const TASKS_COL = collection(db, "workspaces", WORKSPACE_ID, "tasks");
+    const TASKS_COL = collection(db, "ehs_tasks");
 
     // 暴露給非 module script 使用（下面大量 function 在 window）
     window.__fb = { app, analytics, auth, db, TASKS_COL };
@@ -1045,3 +1045,4 @@
   </script>
 </body>
 </html>
+
