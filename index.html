@@ -290,7 +290,6 @@
       collection,
       doc,
       setDoc,
-      updateDoc,
       deleteDoc,
       onSnapshot,
       serverTimestamp,
@@ -298,7 +297,7 @@
       orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // ===== Firebase config（沿用你提供的）=====
+    // ===== Firebase config =====
     const firebaseConfig = {
       apiKey: "AIzaSyBGgf0A5MFOqPxQvlX8tACski48bMYI_DU",
       authDomain: "esh-v85.firebaseapp.com",
@@ -309,7 +308,6 @@
       measurementId: "G-MMVQN63GDG"
     };
 
-    // ===== Init Firebase =====
     const app = initializeApp(firebaseConfig);
 
     let analytics = null;
@@ -318,14 +316,11 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // 你可以把 workspaceId 改成公司代碼（跨公司隔離用）
-    // 例如：const WORKSPACE_ID = "YOUR_COMPANY_2026";
-    const WORKSPACE_ID = "DEFAULT_WORKSPACE_V85";
+    // ✅ 直接使用你目前 Firestore 的集合
     const TASKS_COL = collection(db, "ehs_tasks");
 
-    // 暴露給非 module script 使用（下面大量 function 在 window）
+    // expose
     window.__fb = { app, analytics, auth, db, TASKS_COL };
-    window.__fb_meta = { WORKSPACE_ID };
 
     // ===== Sync UI =====
     function setSyncState(text, ok = true) {
@@ -338,17 +333,14 @@
         : "flex items-center bg-red-50 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold border border-red-200";
     }
 
-    // ===== Auth + Realtime subscribe =====
     async function bootRealtime() {
       setSyncState("登入中…", true);
 
-      // Anonymous login
       try {
         await signInAnonymously(auth);
       } catch (e) {
         console.error("Anonymous sign-in failed:", e);
         setSyncState("登入失敗（請檢查 Anonymous Auth 是否啟用）", false);
-        // 仍允許用 localStorage 看資料
         window.__offlineOnly = true;
         return;
       }
@@ -358,23 +350,16 @@
           setSyncState("未登入", false);
           return;
         }
+
         setSyncState("同步中…", true);
 
-        // Query：依 createdAt 排序（沒有 createdAt 時，以 updatedAt 退而求其次）
-        const q = query(TASKS_COL, orderBy("createdAt", "desc"));
+        // ✅ 使用 Timestamp 排序（穩定，不怕字串日期問題）
+        const q = query(TASKS_COL, orderBy("_createdTs", "desc"));
 
         onSnapshot(q, (snap) => {
           const list = [];
-          snap.forEach(d => {
-            const data = d.data() || {};
-            list.push({ ...data, id: d.id });
-          });
-
-          // 把雲端資料推回主程式（在非 module script 的 tasks）
-          if (typeof window.__applyRemoteTasks === "function") {
-            window.__applyRemoteTasks(list);
-          }
-
+          snap.forEach(d => list.push({ ...(d.data() || {}), id: d.id }));
+          if (typeof window.__applyRemoteTasks === "function") window.__applyRemoteTasks(list);
           setSyncState("已同步", true);
         }, (err) => {
           console.error("onSnapshot error:", err);
@@ -386,10 +371,16 @@
 
     await bootRealtime();
 
-    // ===== Expose CRUD helpers to window =====
+    // ===== stable id for import de-dup =====
+    function stableIdFromTask(t) {
+      const s = `${t.factory || ""}|${t.category || ""}|${t.owner || ""}|${t.task || ""}|${t.deadline || ""}|${t.createdAt || ""}`;
+      // base64, strip non-safe, cap length
+      return btoa(unescape(encodeURIComponent(s))).replaceAll("=", "").replaceAll("+", "").replaceAll("/", "").slice(0, 32);
+    }
+
+    // ===== Expose CRUD helpers =====
     window.__fs_upsert = async (task) => {
-      // task.id 若是舊數字 id，轉成 string docId；若沒有 id 就用 Date.now
-      const docId = String(task.id ?? Date.now());
+      const docId = String(task.id ?? stableIdFromTask(task) ?? Date.now());
       const ref = doc(TASKS_COL, docId);
 
       const payload = {
@@ -405,19 +396,23 @@
         createdAt: task.createdAt || new Date().toISOString().split("T")[0],
         deadline: task.deadline || new Date().toISOString().split("T")[0],
         progress: Number.isFinite(parseInt(task.progress)) ? parseInt(task.progress) : 0,
-        updatedAt: serverTimestamp()
+
+        // ✅ timestamps
+        _updatedTs: serverTimestamp(),
+        ...(task._createdTs ? {} : { _createdTs: serverTimestamp() })
       };
 
-      // setDoc merge，避免不小心清空欄位
       await setDoc(ref, payload, { merge: true });
       return docId;
     };
 
     window.__fs_delete = async (id) => {
-      const docId = String(id);
-      const ref = doc(TASKS_COL, docId);
+      const ref = doc(TASKS_COL, String(id));
       await deleteDoc(ref);
     };
+
+    // expose stable id for non-module import flow if needed
+    window.__stableIdFromTask = stableIdFromTask;
   </script>
 
   <script>
@@ -435,7 +430,6 @@
     // ===== Utils =====
     const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-    // 允許：YYYY-MM-DD 或 YYYY.MM.DD -> 轉成 YYYY-MM-DD
     const fixDate = (v) => {
       if (typeof v !== 'string') return null;
       const s = v.trim();
@@ -444,7 +438,6 @@
       return null;
     };
 
-    // 將 YYYY-MM-DD 以「本地日」解析，避免 UTC 造成差一天
     const parseLocalDate = (yyyy_mm_dd) => new Date(`${yyyy_mm_dd}T00:00:00`);
 
     function normalizeTask(t, i = 0) {
@@ -452,7 +445,6 @@
       const createdAt = fixDate(t?.createdAt) || today;
       const deadline = fixDate(t?.deadline) || today;
 
-      // Firestore doc id 會是字串；保留 string id，避免跨裝置衝突
       const id = (t?.id !== undefined && t?.id !== null) ? String(t.id) : String(Date.now() + i);
 
       return {
@@ -468,7 +460,11 @@
         closeNote: t?.closeNote || '',
         createdAt,
         deadline,
-        progress: Number.isFinite(parseInt(t?.progress)) ? parseInt(t.progress) : 0
+        progress: Number.isFinite(parseInt(t?.progress)) ? parseInt(t.progress) : 0,
+
+        // timestamps (optional)
+        _createdTs: t?._createdTs || null,
+        _updatedTs: t?._updatedTs || null
       };
     }
 
@@ -528,17 +524,13 @@
     }
 
     // ===== Realtime apply from Firestore =====
-    // module script 會呼叫這個，把雲端 tasks 套回來
     window.__applyRemoteTasks = (remoteList) => {
       const normalized = normalizeTasks(remoteList).map(t => ({
         ...t,
         source: t.source === '例行專案' ? '專案工作' : t.source
       }));
 
-      // 套回主 state
       tasks = normalized;
-
-      // 同步寫入 localStorage 當快取
       saveDataToStorage();
 
       updateFilters();
@@ -893,7 +885,6 @@
 
       if (!taskObj.task || !taskObj.owner) return alert("請填寫必填欄位");
 
-      // 先更新本機 UI（即時回饋），再寫雲端；雲端回來會 onSnapshot 校正
       if (editingId) {
         const idx = tasks.findIndex(x => String(x.id) === String(editingId));
         if (idx >= 0) tasks[idx] = { ...tasks[idx], ...taskObj };
@@ -906,9 +897,9 @@
       updateFilters();
       renderAll();
 
-      // 寫入 Firestore（若離線或 rules 擋住，至少本機不會壞）
       try {
         if (typeof window.__fs_upsert === "function") {
+          // ✅ 若是新增且 id 只是 Date.now，仍用該 id；匯入去重在 import 端做
           await window.__fs_upsert(taskObj);
           showSaveIndicator();
         }
@@ -921,13 +912,11 @@
     async function deleteTask(id) {
       if (!confirm('確定刪除？')) return;
 
-      // 先刪本機
       tasks = tasks.filter(x => String(x.id) !== String(id));
       saveDataToStorage();
       updateFilters();
       renderAll();
 
-      // 再刪雲端
       try {
         if (typeof window.__fs_delete === "function") {
           await window.__fs_delete(String(id));
@@ -961,25 +950,28 @@
         const workbook = XLSX.read(e.target.result, { type: 'array' });
         const imported = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-        const importedTasks = normalizeTasks(imported).map(t => ({
-          ...t,
-          source: t.source === '例行專案' ? '專案工作' : t.source
-        }));
+        // ✅ 重要：匯入去重（沒有 id 就用 stable key 算出 id）
+        const importedTasks = normalizeTasks(imported).map(t => {
+          const id = t.id ? String(t.id) : (typeof window.__stableIdFromTask === "function" ? window.__stableIdFromTask(t) : String(Date.now()));
+          return {
+            ...t,
+            id,
+            source: t.source === '例行專案' ? '專案工作' : t.source
+          };
+        });
 
-        // 本機立即更新
         tasks = importedTasks;
         saveDataToStorage();
         updateFilters();
         renderAll();
 
-        // 雲端：逐筆 upsert（避免整批覆蓋造成刪除）
         try {
           if (typeof window.__fs_upsert === "function") {
             for (const t of importedTasks) {
               await window.__fs_upsert(t);
             }
             showSaveIndicator();
-            alert("匯入完成：已寫入雲端並同步。");
+            alert("匯入完成：已寫入雲端並同步（已避免重覆新增）。");
           } else {
             alert("匯入完成（離線/未啟用雲端同步）。");
           }
@@ -994,7 +986,6 @@
 
     // ===== Init / Bind =====
     document.addEventListener('DOMContentLoaded', () => {
-      // 先用 localStorage 快速出畫面；雲端 onSnapshot 會再覆蓋成最新
       loadDataFromStorage();
       updateFilters();
       requestAnimationFrame(renderAll);
@@ -1045,4 +1036,3 @@
   </script>
 </body>
 </html>
-
