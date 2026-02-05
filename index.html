@@ -171,55 +171,80 @@
         <h4 class="font-bold text-slate-800" id="modal-title">工作事項編輯</h4>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
       </div>
+
+      <!-- ✅ 改為 grid-cols-2 + 文字欄位全寬 (col-span-2) -->
       <div class="p-8 grid grid-cols-2 gap-6">
+
         <div class="col-span-1">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">廠區</label>
           <select id="f-factory" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
             <option>台北</option><option>龍德</option><option>彰化</option><option>麥寮</option><option>新港</option><option>海外</option>
           </select>
         </div>
+
         <div class="col-span-1">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作類別</label>
           <select id="f-category" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
             <option>PSM</option><option>工安</option><option>環保</option><option>消防</option><option>AI</option><option>庶務</option>
           </select>
         </div>
+
         <div class="col-span-1">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">來源</label>
           <select id="f-source" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleOtherSource(this.value)">
             <option>NOTES</option><option>速報表</option><option>環保通報單</option><option>主管口頭交辦</option><option>報告</option><option>業洽函</option><option>層峰指示</option><option>法規要求</option><option>全企業工安環保通報</option><option>專案工作</option><option>其他</option>
           </select>
         </div>
+
         <div class="col-span-1 hidden" id="other-source-container">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">請輸入具體來源</label>
           <input type="text" id="f-source-other" class="w-full border border-blue-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="來源名稱" />
         </div>
+
         <div class="col-span-2">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作項目</label>
           <input type="text" id="f-task" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
+
         <div class="col-span-2">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">詳細描述</label>
           <textarea id="f-desc" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
+
+        <!-- ✅ 新增：辦理進度（文字） -->
+        <div class="col-span-2">
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">辦理進度（說明）</label>
+          <textarea id="f-progress-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例：已完成現場會勘，待廠務提供改善照片。"></textarea>
+        </div>
+
+        <!-- ✅ 新增：結案說明 -->
+        <div class="col-span-2">
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">結案說明</label>
+          <textarea id="f-close-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例：改善完成並驗收，附件：照片/報告已歸檔。"></textarea>
+        </div>
+
         <div class="col-span-1">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">負責人</label>
           <input type="text" id="f-owner" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
+
         <div class="col-span-1">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">建檔日期</label>
           <input type="date" id="f-created" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
         </div>
+
         <div class="col-span-1">
           <label class="block text-xs font-bold text-slate-400 uppercase mb-2">截止日期</label>
           <input type="date" id="f-deadline" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
+
         <div class="col-span-1 flex items-end pb-3">
           <label class="flex items-center space-x-3 cursor-pointer bg-slate-50 p-3 rounded-lg border border-slate-200 w-full hover:bg-slate-100 transition">
             <input type="checkbox" id="f-is-done" class="modal-checkbox" onchange="handleModalDoneToggle(this.checked)" />
             <span class="text-sm font-bold text-slate-700">設為「已完成」</span>
           </label>
         </div>
+
         <div class="col-span-2">
           <div class="flex justify-between items-center mb-2">
             <label class="block text-xs font-bold text-slate-400 uppercase">目前進度</label>
@@ -227,7 +252,9 @@
           </div>
           <input type="range" id="f-progress" min="0" max="100" step="5" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="handleProgressInput(this.value)" />
         </div>
+
       </div>
+
       <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
         <button onclick="closeModal()" class="px-6 py-2 text-sm font-bold text-slate-400 hover:text-slate-600">取消</button>
         <button onclick="saveTask()" class="px-8 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg shadow-lg hover:bg-blue-700">儲存資料</button>
@@ -262,7 +289,7 @@
       if (typeof v !== 'string') return null;
       const s = v.trim();
       if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-      if (/^\d{4}\.\d{2}\.\d{2}$/.test(s)) return s.replace(/\./g, '-'); // replaceAll 相容性
+      if (/^\d{4}\.\d{2}\.\d{2}$/.test(s)) return s.replace(/\./g, '-');
       return null;
     };
 
@@ -283,6 +310,9 @@
         owner: t?.owner || '',
         task: t?.task || '',
         desc: t?.desc || '',
+        // ✅ 新增兩欄：若舊資料沒有，補空字串
+        progressNote: typeof t?.progressNote === 'string' ? t.progressNote : '',
+        closeNote: typeof t?.closeNote === 'string' ? t.closeNote : '',
         createdAt,
         deadline,
         progress: Number.isFinite(p) ? p : 0
@@ -319,6 +349,8 @@
           owner: "林課長",
           task: "範例：環保通報單追蹤",
           desc: "改善設施。",
+          progressNote: "已通知相關單位，待回覆改善時程。",
+          closeNote: "",
           createdAt: "2024-05-20",
           deadline: "2024-06-15",
           progress: 0
@@ -466,6 +498,14 @@
       renderCharts(tasks);
     }
 
+    // ✅ 安全處理：避免表格顯示時被注入 HTML（把文字當純文字）
+    const escapeHtml = (s) => String(s ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+
     function renderTable(data) {
       const tbody = document.getElementById('main-table-body');
       if (!tbody) return;
@@ -477,6 +517,12 @@
           const s = getStatusInfo(t);
           const isDone = t.progress >= 100;
           const m = parseInt(String(t.createdAt || '').split('-')[1], 10);
+
+          // ✅ 兩段備註：優先顯示辦理進度；若已完成且有結案說明，再加一行
+          const noteLines = [];
+          if (String(t.progressNote || '').trim()) noteLines.push(`進度：${t.progressNote}`);
+          if (t.progress >= 100 && String(t.closeNote || '').trim()) noteLines.push(`結案：${t.closeNote}`);
+          const noteText = noteLines.join('｜');
 
           const row = document.createElement('tr');
           row.className = `hover:bg-slate-50/50 transition ${isDone ? 'opacity-60' : ''}`;
@@ -492,22 +538,23 @@
               </span>
             </td>
             <td class="px-6 py-4">
-              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${t.category}</span>
+              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${escapeHtml(t.category)}</span>
             </td>
             <td class="px-6 py-4">
-              <div class="font-bold text-slate-800">${t.factory}</div>
+              <div class="font-bold text-slate-800">${escapeHtml(t.factory)}</div>
               <div class="text-[10px] font-bold text-blue-600">${isNaN(m) ? '—' : `${m}月管制`}</div>
             </td>
             <td class="px-6 py-4">
-              <div class="font-bold text-slate-700">${t.owner}</div>
-              <div class="text-[10px] text-slate-400 font-bold truncate max-w-[120px]" title="${t.source}">${t.source}</div>
+              <div class="font-bold text-slate-700">${escapeHtml(t.owner)}</div>
+              <div class="text-[10px] text-slate-400 font-bold truncate max-w-[120px]" title="${escapeHtml(t.source)}">${escapeHtml(t.source)}</div>
             </td>
             <td class="px-6 py-4">
-              <div class="font-bold text-slate-800 line-clamp-1 ${isDone ? 'line-through text-slate-400' : ''}">${t.task}</div>
-              <div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">${t.desc}</div>
+              <div class="font-bold text-slate-800 line-clamp-1 ${isDone ? 'line-through text-slate-400' : ''}">${escapeHtml(t.task)}</div>
+              <div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">${escapeHtml(t.desc)}</div>
+              ${noteText ? `<div class="text-[11px] text-slate-500 line-clamp-1 mt-1" title="${escapeHtml(noteText)}">${escapeHtml(noteText)}</div>` : ''}
             </td>
-            <td class="px-6 py-4 text-center font-mono text-xs text-slate-400">${t.createdAt}</td>
-            <td class="px-6 py-4 text-center font-mono text-xs font-bold text-slate-600">${t.deadline}</td>
+            <td class="px-6 py-4 text-center font-mono text-xs text-slate-400">${escapeHtml(t.createdAt)}</td>
+            <td class="px-6 py-4 text-center font-mono text-xs font-bold text-slate-600">${escapeHtml(t.deadline)}</td>
             <td class="px-6 py-4">
               <div class="flex items-center space-x-2">
                 <div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden w-16">
@@ -598,6 +645,8 @@
 
       document.getElementById('f-task').value = t.task;
       document.getElementById('f-desc').value = t.desc;
+      document.getElementById('f-progress-note').value = t.progressNote || '';
+      document.getElementById('f-close-note').value = t.closeNote || '';
       document.getElementById('f-owner').value = t.owner;
 
       document.getElementById('f-created').value = fixDate(t.createdAt) || getTodayStr();
@@ -628,6 +677,9 @@
         source: sourceVal,
         task: document.getElementById('f-task').value,
         desc: document.getElementById('f-desc').value,
+        // ✅ 新增兩欄
+        progressNote: document.getElementById('f-progress-note').value,
+        closeNote: document.getElementById('f-close-note').value,
         owner: document.getElementById('f-owner').value,
         createdAt: createdAtVal,
         deadline: deadlineVal,
@@ -658,7 +710,7 @@
       }
     }
 
-    // ✅ closeModal 時清掉 editingId，避免狀態殘留
+    // closeModal 時清掉 editingId，避免狀態殘留
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
       editingId = null;
@@ -666,6 +718,7 @@
 
     // ===== Excel =====
     function exportToExcel() {
+      // ✅ 直接匯出 tasks（含 progressNote/closeNote），欄位會一起進 Excel
       const ws = XLSX.utils.json_to_sheet(tasks);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Tasks");
@@ -701,7 +754,7 @@
       loadDataFromStorage();
       updateFilters();
 
-      // ✅ Chart.js/Canvas 更穩：延遲到下一個 frame 再 render
+      // Chart.js/Canvas 更穩：延遲到下一個 frame 再 render
       requestAnimationFrame(renderAll);
 
       const currentDateEl = document.getElementById('current-date');
@@ -721,6 +774,8 @@
 
           document.getElementById('f-task').value = "";
           document.getElementById('f-desc').value = "";
+          document.getElementById('f-progress-note').value = "";
+          document.getElementById('f-close-note').value = "";
           document.getElementById('f-owner').value = "";
           document.getElementById('f-created').value = getTodayStr();
           document.getElementById('f-deadline').value = getTodayStr();
@@ -733,10 +788,10 @@
           document.getElementById('f-source').value = 'NOTES';
           toggleOtherSource('NOTES');
 
-          // ✅ 保險：強制隱藏「其他來源」容器（避免殘留顯示）
+          // 保險：強制隱藏「其他來源」容器（避免殘留顯示）
           document.getElementById('other-source-container')?.classList.add('hidden');
 
-          // ✅ 避免「其他來源」殘留上一次輸入
+          // 避免「其他來源」殘留上一次輸入
           const otherEl = document.getElementById('f-source-other');
           if (otherEl) otherEl.value = '';
 
