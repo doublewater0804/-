@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>環安衛工作管理系統 v8.5</title>
+  <title>環安衛工作管理系統 v8.5 (Realtime Sync)</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,13 +32,20 @@
           <span class="text-2xl mr-3">🛡️</span>
           <div>
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">環安衛工作管理系統</h1>
-            <p class="text-[10px] text-slate-400 uppercase tracking-widest leading-none">EHS Task Supervisory System v8.5</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest leading-none">
+              EHS Task Supervisory System v8.5 • Firestore Realtime
+            </p>
           </div>
         </div>
         <div class="flex items-center space-x-4">
           <div id="save-indicator" class="opacity-0 flex items-center bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold">
-            <span class="mr-1">💾</span> 已自動儲存
+            <span class="mr-1">💾</span> 已儲存/同步
           </div>
+
+          <div id="sync-indicator" class="flex items-center bg-slate-50 text-slate-500 px-3 py-1 rounded-full text-[10px] font-bold border border-slate-200">
+            <span class="mr-1">🔄</span><span id="sync-text">同步中…</span>
+          </div>
+
           <div class="text-right hidden sm:block border-r border-slate-200 pr-4">
             <div class="text-[10px] text-slate-400 font-bold uppercase">今日日期</div>
             <div class="text-sm font-mono font-bold text-blue-600" id="current-date">----.--.--</div>
@@ -174,7 +181,6 @@
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
       </div>
 
-      <!-- ✅ 可捲動表單區 -->
       <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
         <div class="grid grid-cols-2 gap-6">
 
@@ -214,7 +220,6 @@
             <textarea id="f-desc" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
           </div>
 
-          <!-- ✅ 新增：辦理進度、結案說明 -->
           <div class="col-span-2">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">辦理進度（文字）</label>
             <textarea id="f-work-progress" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：已發函/已會勘/改善中/待回覆..."></textarea>
@@ -225,7 +230,6 @@
             <textarea id="f-close-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：已完成改善並驗收/已結案核備..."></textarea>
           </div>
 
-          <!-- ✅ 負責人 + 單位 -->
           <div class="col-span-1">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">負責人</label>
             <input type="text" id="f-owner" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
@@ -271,11 +275,30 @@
     </div>
   </div>
 
-  <!-- Firebase init (你之後要接 Firestore 即時同步，會在這個基礎上加) -->
+  <!-- Firebase + Firestore Realtime Sync -->
   <script type="module">
+    // Firebase core
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
 
+    // Auth (Anonymous)
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    // Firestore
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      updateDoc,
+      deleteDoc,
+      onSnapshot,
+      serverTimestamp,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // ===== Firebase config（沿用你提供的）=====
     const firebaseConfig = {
       apiKey: "AIzaSyBGgf0A5MFOqPxQvlX8tACski48bMYI_DU",
       authDomain: "esh-v85.firebaseapp.com",
@@ -286,13 +309,115 @@
       measurementId: "G-MMVQN63GDG"
     };
 
+    // ===== Init Firebase =====
     const app = initializeApp(firebaseConfig);
 
     let analytics = null;
     try { analytics = getAnalytics(app); } catch (e) {}
 
-    window.firebaseApp = app;
-    window.firebaseAnalytics = analytics;
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 你可以把 workspaceId 改成公司代碼（跨公司隔離用）
+    // 例如：const WORKSPACE_ID = "YOUR_COMPANY_2026";
+    const WORKSPACE_ID = "DEFAULT_WORKSPACE_V85";
+    const TASKS_COL = collection(db, "workspaces", WORKSPACE_ID, "tasks");
+
+    // 暴露給非 module script 使用（下面大量 function 在 window）
+    window.__fb = { app, analytics, auth, db, TASKS_COL };
+    window.__fb_meta = { WORKSPACE_ID };
+
+    // ===== Sync UI =====
+    function setSyncState(text, ok = true) {
+      const el = document.getElementById("sync-text");
+      const wrap = document.getElementById("sync-indicator");
+      if (!el || !wrap) return;
+      el.textContent = text;
+      wrap.className = ok
+        ? "flex items-center bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-200"
+        : "flex items-center bg-red-50 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold border border-red-200";
+    }
+
+    // ===== Auth + Realtime subscribe =====
+    async function bootRealtime() {
+      setSyncState("登入中…", true);
+
+      // Anonymous login
+      try {
+        await signInAnonymously(auth);
+      } catch (e) {
+        console.error("Anonymous sign-in failed:", e);
+        setSyncState("登入失敗（請檢查 Anonymous Auth 是否啟用）", false);
+        // 仍允許用 localStorage 看資料
+        window.__offlineOnly = true;
+        return;
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          setSyncState("未登入", false);
+          return;
+        }
+        setSyncState("同步中…", true);
+
+        // Query：依 createdAt 排序（沒有 createdAt 時，以 updatedAt 退而求其次）
+        const q = query(TASKS_COL, orderBy("createdAt", "desc"));
+
+        onSnapshot(q, (snap) => {
+          const list = [];
+          snap.forEach(d => {
+            const data = d.data() || {};
+            list.push({ ...data, id: d.id });
+          });
+
+          // 把雲端資料推回主程式（在非 module script 的 tasks）
+          if (typeof window.__applyRemoteTasks === "function") {
+            window.__applyRemoteTasks(list);
+          }
+
+          setSyncState("已同步", true);
+        }, (err) => {
+          console.error("onSnapshot error:", err);
+          setSyncState("同步失敗（請檢查 Firestore Rules）", false);
+          window.__offlineOnly = true;
+        });
+      });
+    }
+
+    await bootRealtime();
+
+    // ===== Expose CRUD helpers to window =====
+    window.__fs_upsert = async (task) => {
+      // task.id 若是舊數字 id，轉成 string docId；若沒有 id 就用 Date.now
+      const docId = String(task.id ?? Date.now());
+      const ref = doc(TASKS_COL, docId);
+
+      const payload = {
+        factory: task.factory || "台北",
+        category: task.category || "工安",
+        source: task.source || "NOTES",
+        owner: task.owner || "",
+        unit: task.unit || "",
+        task: task.task || "",
+        desc: task.desc || "",
+        workProgress: task.workProgress || "",
+        closeNote: task.closeNote || "",
+        createdAt: task.createdAt || new Date().toISOString().split("T")[0],
+        deadline: task.deadline || new Date().toISOString().split("T")[0],
+        progress: Number.isFinite(parseInt(task.progress)) ? parseInt(task.progress) : 0,
+        updatedAt: serverTimestamp()
+      };
+
+      // setDoc merge，避免不小心清空欄位
+      await setDoc(ref, payload, { merge: true });
+      return docId;
+    };
+
+    window.__fs_delete = async (id) => {
+      const docId = String(id);
+      const ref = doc(TASKS_COL, docId);
+      await deleteDoc(ref);
+    };
   </script>
 
   <script>
@@ -327,13 +452,16 @@
       const createdAt = fixDate(t?.createdAt) || today;
       const deadline = fixDate(t?.deadline) || today;
 
+      // Firestore doc id 會是字串；保留 string id，避免跨裝置衝突
+      const id = (t?.id !== undefined && t?.id !== null) ? String(t.id) : String(Date.now() + i);
+
       return {
-        id: t?.id ?? (Date.now() + i),
+        id,
         factory: t?.factory || '台北',
         category: t?.category || '工安',
         source: t?.source || 'NOTES',
         owner: t?.owner || '',
-        unit: t?.unit || '',                 // ✅ 新增：單位
+        unit: t?.unit || '',
         task: t?.task || '',
         desc: t?.desc || '',
         workProgress: t?.workProgress || '',
@@ -348,7 +476,7 @@
       return (Array.isArray(list) ? list : []).map((t, i) => normalizeTask(t, i));
     }
 
-    // ===== Storage =====
+    // ===== Storage（當離線快取/備援）=====
     function loadDataFromStorage() {
       const raw =
         localStorage.getItem(LOCAL_STORAGE_KEY) ||
@@ -366,8 +494,8 @@
       }
 
       if (tasks.length === 0) {
-        tasks = [{
-          id: 1,
+        tasks = normalizeTasks([{
+          id: "sample-1",
           factory: "麥寮",
           category: "工安",
           source: "環保通報單",
@@ -380,7 +508,7 @@
           createdAt: "2024-05-20",
           deadline: "2024-06-15",
           progress: 0
-        }];
+        }]);
         saveDataToStorage();
       }
     }
@@ -398,6 +526,24 @@
       el.classList.remove('opacity-0');
       setTimeout(() => el.classList.add('opacity-0'), 1500);
     }
+
+    // ===== Realtime apply from Firestore =====
+    // module script 會呼叫這個，把雲端 tasks 套回來
+    window.__applyRemoteTasks = (remoteList) => {
+      const normalized = normalizeTasks(remoteList).map(t => ({
+        ...t,
+        source: t.source === '例行專案' ? '專案工作' : t.source
+      }));
+
+      // 套回主 state
+      tasks = normalized;
+
+      // 同步寫入 localStorage 當快取
+      saveDataToStorage();
+
+      updateFilters();
+      renderAll();
+    };
 
     // ===== Modal helpers =====
     function handleModalDoneToggle(isChecked) {
@@ -522,11 +668,9 @@
 
       renderTable(filtered);
 
-      // ✅ 需求：紅框(各廠區堆疊圖)只跟「類別」走
       const cat = document.getElementById('filter-category')?.value || 'all';
       const chartData = (cat === 'all') ? tasks : tasks.filter(t => t.category === cat);
 
-      // 圓環圖仍顯示全量（可改成跟類別走：把 tasks 換 chartData 即可）
       renderCharts(tasks, chartData);
     }
 
@@ -577,7 +721,7 @@
               </span>
             </td>
             <td class="px-6 py-4">
-              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${t.category}</span>
+              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${escapeHtml(t.category)}</span>
             </td>
             <td class="px-6 py-4">
               <div class="font-bold text-slate-800">${escapeHtml(t.factory)}</div>
@@ -605,8 +749,8 @@
             </td>
             <td class="px-6 py-4 text-center">
               <div class="flex items-center justify-center space-x-1">
-                <button onclick="editTask(${t.id})" class="text-blue-500 hover:bg-blue-50 px-2 py-1 rounded transition font-bold text-xs">編輯</button>
-                <button onclick="deleteTask(${t.id})" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded transition font-bold text-xs">刪除</button>
+                <button onclick="editTask('${t.id}')" class="text-blue-500 hover:bg-blue-50 px-2 py-1 rounded transition font-bold text-xs">編輯</button>
+                <button onclick="deleteTask('${t.id}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded transition font-bold text-xs">刪除</button>
               </div>
             </td>
           `;
@@ -619,7 +763,6 @@
       const canvasFactory = document.getElementById('factoryChart');
       if (!canvasStatus || !canvasFactory) return;
 
-      // ===== 圓環：狀態總覽（全量）=====
       const counts = { done: 0, active: 0, warning: 0, overdue: 0 };
       statusDataAll.forEach(t => counts[getStatusInfo(t).code]++);
 
@@ -642,7 +785,6 @@
         }
       });
 
-      // ===== 長條：各廠區堆疊（跟「類別」走）=====
       const facLabels = ['台北', '龍德', '彰化', '麥寮', '新港', '海外'];
       const facAgg = facLabels.reduce((acc, f) => {
         acc[f] = { done: 0, active: 0, warning: 0, overdue: 0 };
@@ -688,8 +830,8 @@
 
     // ===== CRUD =====
     function editTask(id) {
-      editingId = id;
-      const t = tasks.find(x => x.id === id);
+      editingId = String(id);
+      const t = tasks.find(x => String(x.id) === String(id));
       if (!t) return;
 
       document.getElementById('modal-title').innerText = "編輯工作事項";
@@ -710,7 +852,7 @@
       document.getElementById('f-close-note').value = t.closeNote || '';
 
       document.getElementById('f-owner').value = t.owner;
-      document.getElementById('f-unit').value = t.unit || '';  // ✅ 新增回填：單位
+      document.getElementById('f-unit').value = t.unit || '';
 
       document.getElementById('f-created').value = fixDate(t.createdAt) || getTodayStr();
       document.getElementById('f-deadline').value = fixDate(t.deadline) || getTodayStr();
@@ -723,7 +865,7 @@
       document.getElementById('modal').classList.remove('hidden');
     }
 
-    function saveTask() {
+    async function saveTask() {
       let sourceVal = document.getElementById('f-source').value;
       if (sourceVal === '其他') {
         const other = document.getElementById('f-source-other').value.trim();
@@ -734,13 +876,14 @@
       const deadlineVal = fixDate(document.getElementById('f-deadline').value) || getTodayStr();
 
       const taskObj = {
+        id: editingId ? String(editingId) : String(Date.now()),
         factory: document.getElementById('f-factory').value,
         category: document.getElementById('f-category').value,
         source: sourceVal,
         task: document.getElementById('f-task').value,
         desc: document.getElementById('f-desc').value,
         owner: document.getElementById('f-owner').value,
-        unit: document.getElementById('f-unit').value, // ✅ 新增：單位
+        unit: document.getElementById('f-unit').value,
         workProgress: document.getElementById('f-work-progress').value,
         closeNote: document.getElementById('f-close-note').value,
         createdAt: createdAtVal,
@@ -750,25 +893,49 @@
 
       if (!taskObj.task || !taskObj.owner) return alert("請填寫必填欄位");
 
+      // 先更新本機 UI（即時回饋），再寫雲端；雲端回來會 onSnapshot 校正
       if (editingId) {
-        const idx = tasks.findIndex(x => x.id === editingId);
+        const idx = tasks.findIndex(x => String(x.id) === String(editingId));
         if (idx >= 0) tasks[idx] = { ...tasks[idx], ...taskObj };
       } else {
-        tasks.push({ id: Date.now(), ...taskObj });
+        tasks.push(taskObj);
       }
 
       saveDataToStorage();
       closeModal();
       updateFilters();
       renderAll();
+
+      // 寫入 Firestore（若離線或 rules 擋住，至少本機不會壞）
+      try {
+        if (typeof window.__fs_upsert === "function") {
+          await window.__fs_upsert(taskObj);
+          showSaveIndicator();
+        }
+      } catch (e) {
+        console.error("Firestore upsert failed:", e);
+        alert("雲端同步失敗：請檢查 Firestore 是否啟用 / Rules 是否允許寫入。");
+      }
     }
 
-    function deleteTask(id) {
-      if (confirm('確定刪除？')) {
-        tasks = tasks.filter(x => x.id !== id);
-        saveDataToStorage();
-        updateFilters();
-        renderAll();
+    async function deleteTask(id) {
+      if (!confirm('確定刪除？')) return;
+
+      // 先刪本機
+      tasks = tasks.filter(x => String(x.id) !== String(id));
+      saveDataToStorage();
+      updateFilters();
+      renderAll();
+
+      // 再刪雲端
+      try {
+        if (typeof window.__fs_delete === "function") {
+          await window.__fs_delete(String(id));
+          showSaveIndicator();
+        }
+      } catch (e) {
+        console.error("Firestore delete failed:", e);
+        alert("雲端刪除失敗：請檢查 Firestore Rules 是否允許刪除。");
       }
     }
 
@@ -785,34 +952,51 @@
       XLSX.writeFile(wb, `EHS_Tasks_${getTodayStr()}.xlsx`);
     }
 
-    function importFromExcel(event) {
+    async function importFromExcel(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const workbook = XLSX.read(e.target.result, { type: 'array' });
         const imported = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-        tasks = normalizeTasks(imported).map(t => ({
+        const importedTasks = normalizeTasks(imported).map(t => ({
           ...t,
           source: t.source === '例行專案' ? '專案工作' : t.source
         }));
 
+        // 本機立即更新
+        tasks = importedTasks;
         saveDataToStorage();
         updateFilters();
         renderAll();
+
+        // 雲端：逐筆 upsert（避免整批覆蓋造成刪除）
+        try {
+          if (typeof window.__fs_upsert === "function") {
+            for (const t of importedTasks) {
+              await window.__fs_upsert(t);
+            }
+            showSaveIndicator();
+            alert("匯入完成：已寫入雲端並同步。");
+          } else {
+            alert("匯入完成（離線/未啟用雲端同步）。");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("匯入已完成本機更新，但雲端同步失敗：請檢查 Firestore Rules。");
+        }
       };
       reader.readAsArrayBuffer(file);
-
       event.target.value = '';
     }
 
     // ===== Init / Bind =====
     document.addEventListener('DOMContentLoaded', () => {
+      // 先用 localStorage 快速出畫面；雲端 onSnapshot 會再覆蓋成最新
       loadDataFromStorage();
       updateFilters();
-
       requestAnimationFrame(renderAll);
 
       const currentDateEl = document.getElementById('current-date');
@@ -837,7 +1021,7 @@
           document.getElementById('f-close-note').value = '';
 
           document.getElementById('f-owner').value = "";
-          document.getElementById('f-unit').value = ""; // ✅ 新增：清空單位
+          document.getElementById('f-unit').value = "";
 
           document.getElementById('f-created').value = getTodayStr();
           document.getElementById('f-deadline').value = getTodayStr();
