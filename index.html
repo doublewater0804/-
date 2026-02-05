@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>環安衛工作管理系統 v8.5</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
   <style>
     .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
@@ -33,14 +35,17 @@
             <p class="text-[10px] text-slate-400 uppercase tracking-widest leading-none">EHS Task Supervisory System v8.5</p>
           </div>
         </div>
+
         <div class="flex items-center space-x-4">
           <div id="save-indicator" class="opacity-0 flex items-center bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold">
             <span class="mr-1">💾</span> 已自動儲存
           </div>
+
           <div class="text-right hidden sm:block border-r border-slate-200 pr-4">
             <div class="text-[10px] text-slate-400 font-bold uppercase">今日日期</div>
             <div class="text-sm font-mono font-bold text-blue-600" id="current-date">----.--.--</div>
           </div>
+
           <div class="flex space-x-2">
             <button onclick="exportToExcel()" class="flex items-center bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
               <span class="mr-1">📤</span> 備份 Excel
@@ -100,6 +105,7 @@
         <select id="filter-month" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50/50 font-bold">
           <option value="all">所有月份</option>
         </select>
+
         <select id="filter-status" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="all">所有狀態</option>
           <option value="done">已完成</option>
@@ -107,21 +113,25 @@
           <option value="warning">期限將至</option>
           <option value="active">正常進行</option>
         </select>
+
         <select id="filter-factory" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="all">所有廠區</option>
           <option value="台北">台北</option><option value="龍德">龍德</option>
           <option value="彰化">彰化</option><option value="麥寮">麥寮</option>
           <option value="新港">新港</option><option value="海外">海外</option>
         </select>
+
         <select id="filter-category" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="all">所有類別</option>
           <option value="PSM">PSM</option><option value="工安">工安</option>
           <option value="環保">環保</option><option value="消防">消防</option>
           <option value="AI">AI</option><option value="庶務">庶務</option>
         </select>
+
         <select id="filter-owner" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="all">所有負責人</option>
         </select>
+
         <select id="filter-source" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="all">所有來源</option>
           <option value="NOTES">NOTES</option><option value="速報表">速報表</option>
@@ -131,6 +141,7 @@
           <option value="全企業工安環保通報">全企業工安環保通報</option><option value="專案工作">專案工作</option>
           <option value="其他">其他</option>
         </select>
+
         <div class="ml-auto flex items-center space-x-2">
           <span class="text-[11px] font-bold text-slate-400 uppercase mr-2" id="table-count">0 ITEMS</span>
           <button id="btn-add" class="bg-blue-600 text-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-100 flex items-center">
@@ -175,12 +186,14 @@
       <!-- ✅ 可捲動表單區 -->
       <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
         <div class="grid grid-cols-2 gap-6">
+
           <div class="col-span-1">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">廠區</label>
             <select id="f-factory" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
               <option>台北</option><option>龍德</option><option>彰化</option><option>麥寮</option><option>新港</option><option>海外</option>
             </select>
           </div>
+
           <div class="col-span-1">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作類別</label>
             <select id="f-category" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
@@ -194,6 +207,7 @@
               <option>NOTES</option><option>速報表</option><option>環保通報單</option><option>主管口頭交辦</option><option>報告</option><option>業洽函</option><option>層峰指示</option><option>法規要求</option><option>全企業工安環保通報</option><option>專案工作</option><option>其他</option>
             </select>
           </div>
+
           <div class="col-span-1 hidden" id="other-source-container">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">請輸入具體來源</label>
             <input type="text" id="f-source-other" class="w-full border border-blue-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="來源名稱" />
@@ -203,16 +217,17 @@
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">工作項目</label>
             <input type="text" id="f-task" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
+
           <div class="col-span-2">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">詳細描述</label>
             <textarea id="f-desc" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
           </div>
 
-          <!-- ✅ 新增：辦理進度、結案說明 -->
           <div class="col-span-2">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">辦理進度（文字）</label>
             <textarea id="f-work-progress" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：已發函/已會勘/改善中/待回覆..."></textarea>
           </div>
+
           <div class="col-span-2">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">結案說明</label>
             <textarea id="f-close-note" rows="2" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：已完成改善並驗收/已結案核備..."></textarea>
@@ -222,20 +237,24 @@
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">負責人</label>
             <input type="text" id="f-owner" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
+
           <div class="col-span-1">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">建檔日期</label>
             <input type="date" id="f-created" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
           </div>
+
           <div class="col-span-1">
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">截止日期</label>
             <input type="date" id="f-deadline" class="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
+
           <div class="col-span-1 flex items-end pb-3">
             <label class="flex items-center space-x-3 cursor-pointer bg-slate-50 p-3 rounded-lg border border-slate-200 w-full hover:bg-slate-100 transition">
               <input type="checkbox" id="f-is-done" class="modal-checkbox" onchange="handleModalDoneToggle(this.checked)" />
               <span class="text-sm font-bold text-slate-700">設為「已完成」</span>
             </label>
           </div>
+
           <div class="col-span-2">
             <div class="flex justify-between items-center mb-2">
               <label class="block text-xs font-bold text-slate-400 uppercase">目前進度</label>
@@ -243,6 +262,7 @@
             </div>
             <input type="range" id="f-progress" min="0" max="100" step="5" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="handleProgressInput(this.value)" />
           </div>
+
         </div>
       </div>
 
@@ -252,46 +272,55 @@
       </div>
     </div>
   </div>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBGgf0A5MFOqPxQvlX8tACski48bMYI_DU",
-    authDomain: "esh-v85.firebaseapp.com",
-    projectId: "esh-v85",
-    storageBucket: "esh-v85.firebasestorage.app",
-    messagingSenderId: "1021350670476",
-    appId: "1:1021350670476:web:afd5bc96ff28c910f48ba9",
-    measurementId: "G-MMVQN63GDG"
-  };
+  <!-- ✅ 全部 JS（含 Firebase）改成 module，並把需要的函式掛到 window 給 onclick 用 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+      onSnapshot, query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
+    // ===== Firebase Config（你的）=====
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGgf0A5MFOqPxQvlX8tACski48bMYI_DU",
+      authDomain: "esh-v85.firebaseapp.com",
+      projectId: "esh-v85",
+      storageBucket: "esh-v85.firebasestorage.app",
+      messagingSenderId: "1021350670476",
+      appId: "1:1021350670476:web:afd5bc96ff28c910f48ba9",
+      measurementId: "G-MMVQN63GDG"
+    };
 
-  // Analytics 可能因環境而失敗，不影響主程式
-  let analytics = null;
-  try { analytics = getAnalytics(app); } catch (e) {}
+    const app = initializeApp(firebaseConfig);
 
-  // 讓非 module 的原本程式也能使用
-  window.firebaseApp = app;
-  window.firebaseAnalytics = analytics;
-</script>
-  <script>
-    // ===== Storage Keys (v8.5 建議獨立) =====
+    // Analytics 可能因環境而失敗，不影響主程式
+    try { getAnalytics(app); } catch (e) {}
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ===== Storage Keys（本地備援）=====
     const LOCAL_STORAGE_KEY = 'ESH_MANAGEMENT_DATA_V85';
     const LOCAL_STORAGE_BACKUP_KEY = 'ESH_MANAGEMENT_DATA_V85__BACKUP';
 
+    // ===== Firestore Collection =====
+    // 你只有自己使用，直接用單一 collection
+    const TASKS_COL = collection(db, "ehs_tasks");
+
     // ===== State =====
-    let tasks = [];
+    let tasks = [];                 // 這個永遠以 Firestore snapshot 為準
     let statusChart = null;
     let factoryChart = null;
-    let editingId = null;
+    let editingId = null;           // Firestore docId
     let lastManualProgress = 0;
+    let unsubTasks = null;
 
     // ===== Utils =====
     const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-    // 允許：YYYY-MM-DD 或 YYYY.MM.DD -> 轉成 YYYY-MM-DD
     const fixDate = (v) => {
       if (typeof v !== 'string') return null;
       const s = v.trim();
@@ -300,72 +329,48 @@
       return null;
     };
 
-    // 將 YYYY-MM-DD 以「本地日」解析，避免 UTC 造成差一天
     const parseLocalDate = (yyyy_mm_dd) => new Date(`${yyyy_mm_dd}T00:00:00`);
 
-    function normalizeTask(t, i = 0) {
+    // ✅ replaceAll 相容性問題：改用 regex replace（更穩）
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function normalizeTask(t, id = null) {
       const today = getTodayStr();
       const createdAt = fixDate(t?.createdAt) || today;
       const deadline = fixDate(t?.deadline) || today;
 
       return {
-        id: t?.id ?? (Date.now() + i),
+        id: id ?? t?.id ?? String(Date.now()),
         factory: t?.factory || '台北',
         category: t?.category || '工安',
         source: t?.source || 'NOTES',
         owner: t?.owner || '',
         task: t?.task || '',
         desc: t?.desc || '',
-        // ✅ 新增欄位
         workProgress: t?.workProgress || '',
         closeNote: t?.closeNote || '',
         createdAt,
         deadline,
-        progress: Number.isFinite(parseInt(t?.progress)) ? parseInt(t.progress) : 0
+        progress: Number.isFinite(parseInt(t?.progress)) ? parseInt(t.progress) : 0,
+        // Firestore 排序輔助
+        _createdTs: t?._createdTs || null,
+        _updatedTs: t?._updatedTs || null
       };
     }
 
     function normalizeTasks(list) {
-      return (Array.isArray(list) ? list : []).map((t, i) => normalizeTask(t, i));
+      return (Array.isArray(list) ? list : []).map((t) => normalizeTask(t));
     }
 
-    // ===== Storage =====
-    function loadDataFromStorage() {
-      const raw =
-        localStorage.getItem(LOCAL_STORAGE_KEY) ||
-        localStorage.getItem(LOCAL_STORAGE_BACKUP_KEY);
-
-      if (raw) {
-        try {
-          tasks = normalizeTasks(JSON.parse(raw)).map(t => ({
-            ...t,
-            source: t.source === '例行專案' ? '專案工作' : t.source
-          }));
-        } catch (e) {
-          tasks = [];
-        }
-      }
-
-      if (tasks.length === 0) {
-        tasks = [{
-          id: 1,
-          factory: "麥寮",
-          category: "工安",
-          source: "環保通報單",
-          owner: "林課長",
-          task: "範例：環保通報單追蹤",
-          desc: "改善設施。",
-          workProgress: "已通知相關單位，改善中。",
-          closeNote: "",
-          createdAt: "2024-05-20",
-          deadline: "2024-06-15",
-          progress: 0
-        }];
-        saveDataToStorage();
-      }
-    }
-
-    function saveDataToStorage() {
+    // ===== Local backup (optional) =====
+    function saveLocalBackup() {
       const payload = JSON.stringify(tasks);
       localStorage.setItem(LOCAL_STORAGE_KEY, payload);
       localStorage.setItem(LOCAL_STORAGE_BACKUP_KEY, payload);
@@ -379,30 +384,7 @@
       setTimeout(() => el.classList.add('opacity-0'), 1500);
     }
 
-    // ===== Modal helpers =====
-    function handleModalDoneToggle(isChecked) {
-      const progressInput = document.getElementById('f-progress');
-      const progressText = document.getElementById('f-progress-text');
-      if (!progressInput || !progressText) return;
-
-      if (isChecked) {
-        lastManualProgress = progressInput.value;
-        progressInput.value = 100;
-      } else {
-        progressInput.value = (lastManualProgress >= 100) ? 0 : lastManualProgress;
-      }
-      progressText.innerText = progressInput.value;
-    }
-
-    function handleProgressInput(val) {
-      const checkbox = document.getElementById('f-is-done');
-      const progressText = document.getElementById('f-progress-text');
-      if (progressText) progressText.innerText = val;
-      if (checkbox) checkbox.checked = (parseInt(val) === 100);
-      if (val < 100) lastManualProgress = val;
-    }
-
-    // ===== Business logic =====
+    // ===== Status logic =====
     function getStatusInfo(task) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -435,8 +417,9 @@
       if (!container) return;
       container.classList.toggle('hidden', val !== '其他');
     }
+    window.toggleOtherSource = toggleOtherSource;
 
-    // ===== UI =====
+    // ===== Filters =====
     function updateFilters() {
       const ownerSelect = document.getElementById('filter-owner');
       if (ownerSelect) {
@@ -462,7 +445,7 @@
         monthSelect.innerHTML = '<option value="all">所有月份</option>';
         uniqueMonths.forEach(m => {
           const opt = document.createElement('option');
-          opt.value = m;
+          opt.value = String(m);
           opt.textContent = `${m}月`;
           monthSelect.appendChild(opt);
         });
@@ -483,7 +466,7 @@
         const sInfo = getStatusInfo(t);
         const tMonth = parseInt(String(t.createdAt || '').split('-')[1]);
 
-        return (filters.month === 'all' || String(tMonth) === filters.month) &&
+        return (filters.month === 'all' || String(tMonth) === String(filters.month)) &&
           (filters.status === 'all' || sInfo.code === filters.status) &&
           (filters.factory === 'all' || t.factory === filters.factory) &&
           (filters.category === 'all' || t.category === filters.category) &&
@@ -502,17 +485,8 @@
 
       renderTable(filtered);
 
-      // ✅ 依你要求：廠區長條圖「不要跟篩選器走」→ 永遠用全量 tasks
+      // ✅ 圖表永遠用全量 tasks（不跟篩選器走）
       renderCharts(tasks);
-    }
-
-    function escapeHtml(s) {
-      return String(s ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
 
     function renderTable(data) {
@@ -521,6 +495,7 @@
 
       tbody.innerHTML = '';
       data
+        .slice()
         .sort((a, b) => parseLocalDate(fixDate(b.createdAt) || getTodayStr()) - parseLocalDate(fixDate(a.createdAt) || getTodayStr()))
         .forEach(t => {
           const s = getStatusInfo(t);
@@ -529,7 +504,6 @@
 
           const wp = (t.workProgress || '').trim();
           const cn = (t.closeNote || '').trim();
-
           const extraLines = [
             wp ? `<div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">辦理：${escapeHtml(wp)}</div>` : '',
             cn ? `<div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">結案：${escapeHtml(cn)}</div>` : ''
@@ -549,10 +523,10 @@
               </span>
             </td>
             <td class="px-6 py-4">
-              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${t.category}</span>
+              <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${getCategoryStyle(t.category)}">${escapeHtml(t.category)}</span>
             </td>
             <td class="px-6 py-4">
-              <div class="font-bold text-slate-800">${t.factory}</div>
+              <div class="font-bold text-slate-800">${escapeHtml(t.factory)}</div>
               <div class="text-[10px] font-bold text-blue-600">${isNaN(m) ? '—' : `${m}月管制`}</div>
             </td>
             <td class="px-6 py-4">
@@ -576,8 +550,8 @@
             </td>
             <td class="px-6 py-4 text-center">
               <div class="flex items-center justify-center space-x-1">
-                <button onclick="editTask(${t.id})" class="text-blue-500 hover:bg-blue-50 px-2 py-1 rounded transition font-bold text-xs">編輯</button>
-                <button onclick="deleteTask(${t.id})" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded transition font-bold text-xs">刪除</button>
+                <button onclick="editTask('${t.id}')" class="text-blue-500 hover:bg-blue-50 px-2 py-1 rounded transition font-bold text-xs">編輯</button>
+                <button onclick="deleteTask('${t.id}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded transition font-bold text-xs">刪除</button>
               </div>
             </td>
           `;
@@ -613,7 +587,7 @@
         }
       });
 
-      // ===== 長條：各廠區堆疊（已完成/正常/警告/逾期）=====
+      // ===== 長條：各廠區堆疊 =====
       const facLabels = ['台北', '龍德', '彰化', '麥寮', '新港', '海外'];
       const facAgg = facLabels.reduce((acc, f) => {
         acc[f] = { done: 0, active: 0, warning: 0, overdue: 0 };
@@ -657,8 +631,62 @@
       });
     }
 
-    // ===== CRUD =====
-    function editTask(id) {
+    // ===== Modal helpers =====
+    function handleModalDoneToggle(isChecked) {
+      const progressInput = document.getElementById('f-progress');
+      const progressText = document.getElementById('f-progress-text');
+      if (!progressInput || !progressText) return;
+
+      if (isChecked) {
+        lastManualProgress = progressInput.value;
+        progressInput.value = 100;
+      } else {
+        progressInput.value = (lastManualProgress >= 100) ? 0 : lastManualProgress;
+      }
+      progressText.innerText = progressInput.value;
+    }
+    window.handleModalDoneToggle = handleModalDoneToggle;
+
+    function handleProgressInput(val) {
+      const checkbox = document.getElementById('f-is-done');
+      const progressText = document.getElementById('f-progress-text');
+      if (progressText) progressText.innerText = val;
+      if (checkbox) checkbox.checked = (parseInt(val) === 100);
+      if (val < 100) lastManualProgress = val;
+    }
+    window.handleProgressInput = handleProgressInput;
+
+    // ===== Firestore Sync =====
+    async function startRealtimeSync() {
+      // 先確保匿名登入完成（符合你 rules：request.auth != null）
+      await signInAnonymously(auth);
+
+      // 以 createdAt（字串）排序：你要「建檔日期」排序時比較直覺
+      // 注意：FireStore orderBy 需要欄位存在；我們用 _updatedTs 也可以
+      const q = query(TASKS_COL, orderBy("_updatedTs", "desc"));
+
+      if (unsubTasks) unsubTasks();
+      unsubTasks = onSnapshot(q, (snap) => {
+        const next = [];
+        snap.forEach((d) => {
+          const data = d.data();
+          // 兼容舊資料：source 值修正
+          const fixed = { ...data, source: (data?.source === '例行專案') ? '專案工作' : data?.source };
+          next.push(normalizeTask(fixed, d.id));
+        });
+        tasks = next;
+        saveLocalBackup();
+        updateFilters();
+        renderAll();
+      }, (err) => {
+        console.error("Firestore onSnapshot error:", err);
+        // 若讀取被 rules 擋住，這裡會看到 permission-denied
+        // UI 仍可維持（但不會同步）
+      });
+    }
+
+    // ===== CRUD (Firestore) =====
+    async function editTask(id) {
       editingId = id;
       const t = tasks.find(x => x.id === id);
       if (!t) return;
@@ -678,7 +706,6 @@
       document.getElementById('f-desc').value = t.desc;
       document.getElementById('f-owner').value = t.owner;
 
-      // ✅ 新增欄位回填
       document.getElementById('f-work-progress').value = t.workProgress || '';
       document.getElementById('f-close-note').value = t.closeNote || '';
 
@@ -692,8 +719,9 @@
       lastManualProgress = t.progress;
       document.getElementById('modal').classList.remove('hidden');
     }
+    window.editTask = editTask;
 
-    function saveTask() {
+    async function saveTask() {
       let sourceVal = document.getElementById('f-source').value;
       if (sourceVal === '其他') {
         const other = document.getElementById('f-source-other').value.trim();
@@ -710,82 +738,98 @@
         task: document.getElementById('f-task').value,
         desc: document.getElementById('f-desc').value,
         owner: document.getElementById('f-owner').value,
-        // ✅ 新增欄位
         workProgress: document.getElementById('f-work-progress').value,
         closeNote: document.getElementById('f-close-note').value,
         createdAt: createdAtVal,
         deadline: deadlineVal,
-        progress: parseInt(document.getElementById('f-progress').value)
+        progress: parseInt(document.getElementById('f-progress').value),
+        _updatedTs: serverTimestamp()
       };
 
-      if (!taskObj.task || !taskObj.owner) return alert("請填寫必填欄位");
+      if (!taskObj.task || !taskObj.owner) return alert("請填寫必填欄位（工作項目 / 負責人）");
 
-      if (editingId) {
-        const idx = tasks.findIndex(x => x.id === editingId);
-        if (idx >= 0) tasks[idx] = { ...tasks[idx], ...taskObj };
-      } else {
-        tasks.push({ id: Date.now(), ...taskObj });
-      }
-
-      saveDataToStorage();
-      closeModal();
-      updateFilters();
-      renderAll();
-    }
-
-    function deleteTask(id) {
-      if (confirm('確定刪除？')) {
-        tasks = tasks.filter(x => x.id !== id);
-        saveDataToStorage();
-        updateFilters();
-        renderAll();
+      try {
+        if (editingId) {
+          // 更新既有 doc
+          const ref = doc(db, "ehs_tasks", editingId);
+          await updateDoc(ref, taskObj);
+        } else {
+          // 新增 doc
+          await addDoc(TASKS_COL, { ...taskObj, _createdTs: serverTimestamp() });
+        }
+        closeModal();
+      } catch (e) {
+        console.error("saveTask error:", e);
+        alert("儲存失敗（可能是 Firestore 規則或網路問題）。請開 console 看錯誤。");
       }
     }
+    window.saveTask = saveTask;
+
+    async function deleteTask(id) {
+      if (!confirm('確定刪除？')) return;
+      try {
+        await deleteDoc(doc(db, "ehs_tasks", id));
+      } catch (e) {
+        console.error("deleteTask error:", e);
+        alert("刪除失敗（可能是 Firestore 規則或網路問題）。");
+      }
+    }
+    window.deleteTask = deleteTask;
 
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
-      editingId = null; // 避免狀態殘留
+      editingId = null;
     }
+    window.closeModal = closeModal;
 
     // ===== Excel =====
     function exportToExcel() {
-      const ws = XLSX.utils.json_to_sheet(tasks);
+      const ws = XLSX.utils.json_to_sheet(tasks.map(t => {
+        // 不輸出 Firestore 私有欄位
+        const { _createdTs, _updatedTs, ...rest } = t;
+        return rest;
+      }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Tasks");
       XLSX.writeFile(wb, `EHS_Tasks_${getTodayStr()}.xlsx`);
     }
+    window.exportToExcel = exportToExcel;
 
-    function importFromExcel(event) {
+    async function importFromExcel(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const workbook = XLSX.read(e.target.result, { type: 'array' });
-        const imported = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+      reader.onload = async (e) => {
+        try {
+          const workbook = XLSX.read(e.target.result, { type: 'array' });
+          const importedRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-        tasks = normalizeTasks(imported).map(t => ({
-          ...t,
-          source: t.source === '例行專案' ? '專案工作' : t.source
-        }));
+          const imported = normalizeTasks(importedRaw).map(t => ({
+            ...t,
+            source: t.source === '例行專案' ? '專案工作' : t.source
+          }));
 
-        saveDataToStorage();
-        updateFilters();
-        renderAll();
+          // 匯入策略：逐筆新增（不刪既有資料）
+          for (const t of imported) {
+            const { id, _createdTs, _updatedTs, ...payload } = t;
+            await addDoc(TASKS_COL, { ...payload, _createdTs: serverTimestamp(), _updatedTs: serverTimestamp() });
+          }
+
+          alert(`已匯入 ${imported.length} 筆（採新增方式，不會覆蓋既有資料）`);
+        } catch (err) {
+          console.error("importFromExcel error:", err);
+          alert("匯入失敗：請確認 Excel 欄位格式。");
+        } finally {
+          event.target.value = '';
+        }
       };
       reader.readAsArrayBuffer(file);
-
-      event.target.value = '';
     }
+    window.importFromExcel = importFromExcel;
 
-    // ===== Init / Bind =====
-    document.addEventListener('DOMContentLoaded', () => {
-      loadDataFromStorage();
-      updateFilters();
-
-      // Chart.js/Canvas 更穩：延遲到下一個 frame 再 render
-      requestAnimationFrame(renderAll);
-
+    // ===== Init =====
+    document.addEventListener('DOMContentLoaded', async () => {
       const currentDateEl = document.getElementById('current-date');
       if (currentDateEl) currentDateEl.innerText = getTodayStr();
 
@@ -815,20 +859,25 @@
           document.getElementById('f-source').value = 'NOTES';
           toggleOtherSource('NOTES');
 
-          // 避免「其他來源」殘留
           document.getElementById('other-source-container')?.classList.add('hidden');
           const otherSourceEl = document.getElementById('f-source-other');
           if (otherSourceEl) otherSourceEl.value = '';
 
-          // ✅ 新欄位清空
           document.getElementById('f-work-progress').value = '';
           document.getElementById('f-close-note').value = '';
 
           document.getElementById('modal').classList.remove('hidden');
         });
       }
+
+      // ✅ Firestore 即時同步啟動
+      try {
+        await startRealtimeSync();
+      } catch (e) {
+        console.error("startRealtimeSync failed:", e);
+        alert("Firebase 連線/權限有問題：請開 console 看錯誤（常見是 Firestore rules 擋住）。");
+      }
     });
   </script>
 </body>
 </html>
-
