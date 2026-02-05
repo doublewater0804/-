@@ -111,7 +111,7 @@
           <option value="done">已完成</option>
           <option value="overdue">嚴重逾期</option>
           <option value="warning">期限將至</option>
-          <option value="active">正常進行</option>
+          <option value="active">進行中</option>
         </select>
 
         <select id="filter-factory" class="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
@@ -397,7 +397,7 @@
       if (task.progress >= 100) return { code: 'done', label: '已完成', bg: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500', msg: '達成' };
       if (diffDays < 0) return { code: 'overdue', label: '嚴重逾期', bg: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500', msg: `逾期 ${Math.abs(diffDays)} 天` };
       if (diffDays <= 7) return { code: 'warning', label: '期限將至', bg: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-400', msg: `僅剩 ${diffDays} 天` };
-      return { code: 'active', label: '正常進行', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500', msg: `剩餘 ${diffDays} 天` };
+      return { code: 'active', label: '進行中', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500', msg: `剩餘 ${diffDays} 天` };
     }
 
     function getCategoryStyle(cat) {
@@ -881,3 +881,4 @@
   </script>
 </body>
 </html>
+
